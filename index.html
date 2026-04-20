@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketing Calendar Control Board</title>
+  <meta name="description" content="Shareable visual marketing calendar with month, quarter, and annual views." />
+  <style>
+    :root {
+      --paper: #f4efe7;
+      --panel: rgba(255, 251, 245, 0.88);
+      --panel-strong: rgba(255, 255, 255, 0.92);
+      --ink: #1f1a16;
+      --muted: #6f675f;
+      --line: rgba(31, 26, 22, 0.12);
+      --shadow: 0 22px 60px rgba(54, 38, 19, 0.12);
+      --social: #e46d57;
+      --email: #6d88ff;
+      --promo: #109774;
+      --launch: #aa63ff;
+      --partner: #cb8a2d;
+      --moment: #58785b;
+      --today: #1f1a16;
+      --header-height: 88px;
+      --label-column: 260px;
+      --row-base-height: 132px;
+      --row-stack-gap: 102px;
+      --card-padding: 12px;
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(228, 109, 87, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(109, 136, 255, 0.11), transparent 24%),
+        linear-gradient(180deg, #f8f4ed 0%, var(--paper) 100%);
+      color: var(--ink);
+      font-family: var(--font-serif);
+    }
+
+    body {
+      padding: 26px;
+    }
+
+    .app {
+      max-width: 1580px;
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+    }
+
+    .surface {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero {
+      padding: 28px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .eyebrow {
+      font-family: var(--font-sans);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .hero-top {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 4.8vw, 5rem);
+      line-height: 0.94;
+      letter-spacing: -0.045em;
+      max-width: 10ch;
+    }
+
+    .subcopy {
+      max-width: 82ch;
+      color: #433c36;
+      font-size: 1rem;
+      line-height: 1.55;
+    }
+
+    .chip-row, .stats, .view-switch, .utility-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .chip, .stat, .legend-pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 13px;
+      background: rgba(255, 255, 255, 0.72);
+      font-family: var(--font-sans);
+      font-size: 0.86rem;
+      color: #2f2924;
+    }
+
+    .stat strong {
+      font-size: 1rem;
+      margin-right: 6px;
+    }
+
+    .hero-controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .left-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .view-switch {
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.75);
+    }
+
+    .view-btn, .nav-btn, select {
+      border: 1px solid rgba(31, 26, 22, 0.16);
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 140ms ease, background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    .view-btn {
+      min-width: 88px;
+      font-family: var(--font-sans);
+      font-size: 0.86rem;
+    }
+
+    .view-btn.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+      box-shadow: 0 8px 18px rgba(31, 26, 22, 0.18);
+    }
+
+    .view-btn:hover,
+    .nav-btn:hover,
+    select:hover,
+    .view-btn:focus-visible,
+    .nav-btn:focus-visible,
+    select:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(31, 26, 22, 0.4);
+      background: #fff;
+    }
+
+    select {
+      font-family: var(--font-sans);
+      font-size: 0.86rem;
+      appearance: none;
+      padding-right: 34px;
+      background-image: linear-gradient(45deg, transparent 50%, #3b342d 50%), linear-gradient(135deg, #3b342d 50%, transparent 50%);
+      background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+    }
+
+    .nav-group {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .range-label {
+      min-width: 220px;
+      text-align: center;
+      font-family: var(--font-sans);
+      font-size: 0.86rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #2c2621;
+    }
+
+    .planner-shell {
+      overflow: hidden;
+    }
+
+    .planner-scroll {
+      overflow: auto;
+    }
+
+    .planner {
+      min-width: 1240px;
+      display: grid;
+      grid-template-columns: var(--label-column) 1fr;
+    }
+
+    .sticky-head {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(248, 244, 237, 0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .corner {
+      height: var(--header-height);
+      padding: 16px 20px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .corner strong {
+      font-size: 1.08rem;
+    }
+
+    .timeline-grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(var(--columns), minmax(42px, 1fr));
+      min-height: var(--header-height);
+    }
+
+    .timeline-grid::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to right,
+        transparent 0,
+        transparent calc((100% / var(--columns)) - 1px),
+        rgba(31, 26, 22, 0.09) calc((100% / var(--columns)) - 1px),
+        rgba(31, 26, 22, 0.09) calc(100% / var(--columns))
+      );
+      pointer-events: none;
+    }
+
+    .segment {
+      position: relative;
+      z-index: 1;
+      padding: 12px 6px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      gap: 8px;
+      font-family: var(--font-sans);
+    }
+
+    .segment-top {
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      line-height: 1;
+    }
+
+    .segment-main {
+      font-size: 0.92rem;
+      font-weight: 700;
+      line-height: 1.05;
+      padding: 7px 8px;
+      border-radius: 999px;
+      min-width: 34px;
+    }
+
+    .segment.weekend .segment-main {
+      background: rgba(31, 26, 22, 0.05);
+    }
+
+    .segment.month-segment .segment-main,
+    .segment.week-segment .segment-main {
+      background: transparent;
+      border-radius: 12px;
+      padding: 0;
+      min-width: 0;
+      font-size: 0.88rem;
+    }
+
+    .segment.month-segment .segment-top,
+    .segment.week-segment .segment-top {
+      font-size: 0.68rem;
+    }
+
+    .lane-label {
+      padding: 18px 20px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.44);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+      min-height: var(--row-base-height);
+    }
+
+    .lane-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    .lane-label h2 {
+      margin: 0;
+      font-size: 1.08rem;
+      line-height: 1.06;
+    }
+
+    .lane-label p {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .lane-track {
+      position: relative;
+      min-height: var(--row-base-height);
+      border-bottom: 1px solid var(--line);
+      background:
+        repeating-linear-gradient(
+          to right,
+          transparent 0,
+          transparent calc((100% / var(--columns)) - 1px),
+          rgba(31, 26, 22, 0.08) calc((100% / var(--columns)) - 1px),
+          rgba(31, 26, 22, 0.08) calc(100% / var(--columns))
+        ),
+        linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.14));
+      isolation: isolate;
+    }
+
+    .today-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(31, 26, 22, 0.65);
+      box-shadow: 0 0 0 4px rgba(31, 26, 22, 0.06);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .event-card {
+      position: absolute;
+      border-radius: 18px;
+      border: 1px solid rgba(31, 26, 22, 0.15);
+      background: var(--panel-strong);
+      box-shadow: 0 12px 28px rgba(31, 26, 22, 0.1);
+      overflow: hidden;
+      padding: var(--card-padding) 14px 12px 16px;
+      display: grid;
+      gap: 7px;
+      z-index: 2;
+    }
+
+    .event-card.activation {
+      background: rgba(255,255,255,0.92);
+    }
+
+    .event-card.moment {
+      background: rgba(255, 251, 243, 0.95);
+      border-style: dashed;
+    }
+
+    .event-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 7px;
+      background: var(--event-color);
+    }
+
+    .event-card.compact {
+      min-width: 120px;
+    }
+
+    .event-header {
+      padding-left: 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .event-name {
+      font-size: 0.94rem;
+      line-height: 1.08;
+      font-weight: 700;
+    }
+
+    .event-date {
+      flex: 0 0 auto;
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .event-meta {
+      padding-left: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: rgba(31, 26, 22, 0.06);
+      color: #342d27;
+    }
+
+    .event-note {
+      padding-left: 8px;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      color: #4b443d;
+    }
+
+    .compact .event-meta,
+    .compact .event-note {
+      display: none;
+    }
+
+    .empty-state {
+      min-height: var(--row-base-height);
+      display: grid;
+      place-items: center;
+      padding: 40px 18px;
+      text-align: center;
+      color: var(--muted);
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .footer {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      padding: 22px 24px 28px;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 252, 247, 0.76);
+    }
+
+    .footer-card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .footer-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    .footer-card p,
+    .footer-card li {
+      margin: 0;
+      font-size: 0.94rem;
+      line-height: 1.52;
+      color: #433c36;
+    }
+
+    .footer-card ul {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @media (max-width: 980px) {
+      body { padding: 14px; }
+      .surface { border-radius: 22px; }
+      .hero-controls,
+      .footer {
+        grid-template-columns: 1fr;
+      }
+      .range-label {
+        min-width: 0;
+      }
+      h1 { max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="surface hero">
+      <div class="eyebrow">Live v1 • hosted static page • Slack-updated operating layer</div>
+      <div class="hero-top">
+        <div>
+          <h1>Marketing calendar control board</h1>
+        </div>
+        <div class="stats" id="stats"></div>
+      </div>
+      <div class="subcopy">
+        Live visual calendar for owned media, promotions, launches, partnerships, and key seasonal moments. This v1 is seeded with Devon’s first real promo input plus a 2026 cultural-moments backbone, so the team can start piloting the workflow today.
+      </div>
+      <div class="chip-row" id="legend"></div>
+      <div class="hero-controls">
+        <div class="left-controls">
+          <div class="view-switch" aria-label="View switch">
+            <button class="view-btn active" data-view="month" type="button">Month</button>
+            <button class="view-btn" data-view="quarter" type="button">Quarter</button>
+            <button class="view-btn" data-view="year" type="button">Annual</button>
+          </div>
+
+          <label class="sr-only" for="brandFilter">Brand filter</label>
+          <select id="brandFilter"></select>
+
+          <label class="sr-only" for="statusFilter">Status filter</label>
+          <select id="statusFilter"></select>
+        </div>
+
+        <div class="nav-group" aria-label="Timeline navigation">
+          <button class="nav-btn" id="prevRange" type="button">←</button>
+          <div class="range-label" id="rangeLabel"></div>
+          <button class="nav-btn" id="nextRange" type="button">→</button>
+        </div>
+      </div>
+      <div class="utility-row" id="utilityRow"></div>
+    </section>
+
+    <section class="surface planner-shell">
+      <div class="planner-scroll">
+        <div class="planner" id="planner"></div>
+      </div>
+      <div class="footer">
+        <div class="footer-card">
+          <h3>How this should operate</h3>
+          <p>Slack stays the intake pipe. The page stays the clean visual surface. One update format, one source dataset, one shared URL. That keeps the team out of spreadsheet spaghetti.</p>
+        </div>
+        <div class="footer-card">
+          <h3>Slack intake format</h3>
+          <ul>
+            <li>Add | Lane | Initiative | Brand | Start | End | Owner | Status</li>
+            <li>Move | Initiative | Old Date → New Date</li>
+            <li>Update | Initiative | Field | New Value</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const laneLookup = {
+      social: { label: 'Owned Media, Social', description: 'Organic, creator, and social storytelling beats.', color: '#e46d57' },
+      email: { label: 'Owned Media, Email', description: 'Lifecycle sends, campaign drops, and nurture pushes.', color: '#6d88ff' },
+      promotions: { label: 'Promotions', description: 'Offer windows, urgency moments, and conversion pushes.', color: '#109774' },
+      launches: { label: 'Product Launches', description: 'Launch windows, reveals, waitlists, and support beats.', color: '#aa63ff' },
+      partnerships: { label: 'Partnerships & New Initiatives', description: 'Collabs, pilots, and net-new company bets.', color: '#cb8a2d' },
+      moments: { label: 'Seasonal Holidays & Cultural Moments', description: 'Context moments that shape campaign timing and creative.', color: '#58785b' },
+    };
+
+    const lanes = Object.entries(laneLookup).map(([id, values]) => ({ id, ...values }));
+
+    const events = [
+      {
+        id: 'promo-gwp-may',
+        name: 'GWP, earplugs + travel pouch + glass jar',
+        lane: 'promotions',
+        brand: 'Stasis',
+        owner: 'Devon',
+        status: 'Planned',
+        priority: 'High',
+        channel: 'Promo',
+        type: 'activation',
+        start: '2026-05-18',
+        end: '2026-05-31',
+        note: 'Launch May 18. Last chance messaging May 28. Sale ends May 31. Priority: high intent, improved CPA.',
+      },
+      {
+        id: 'moment-new-year',
+        name: 'New Year’s Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Medium',
+        channel: 'Cultural moment',
+        type: 'moment',
+        start: '2026-01-01',
+        end: '2026-01-01',
+        note: 'Year-opening planning and reset moment.',
+      },
+      {
+        id: 'moment-mlk',
+        name: 'MLK Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Low',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-01-19',
+        end: '2026-01-19',
+        note: 'Federal holiday.',
+      },
+      {
+        id: 'moment-black-history',
+        name: 'Black History Month',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Medium',
+        channel: 'Cultural moment',
+        type: 'moment',
+        start: '2026-02-01',
+        end: '2026-02-28',
+        note: 'Month-long cultural calendar moment.',
+      },
+      {
+        id: 'moment-valentines',
+        name: 'Valentine’s Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Low',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-02-14',
+        end: '2026-02-14',
+        note: 'Single-day holiday moment.',
+      },
+      {
+        id: 'moment-presidents',
+        name: 'Presidents’ Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Medium',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-02-16',
+        end: '2026-02-16',
+        note: 'Common promo and sale anchor.',
+      },
+      {
+        id: 'moment-iwd',
+        name: 'International Women’s Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Low',
+        channel: 'Cultural moment',
+        type: 'moment',
+        start: '2026-03-08',
+        end: '2026-03-08',
+        note: 'Single-day cultural moment.',
+      },
+      {
+        id: 'moment-spring',
+        name: 'First day of spring',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Low',
+        channel: 'Seasonal marker',
+        type: 'moment',
+        start: '2026-03-20',
+        end: '2026-03-20',
+        note: 'Seasonal reset cue for creative and promos.',
+      },
+      {
+        id: 'moment-earth-day',
+        name: 'Earth Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Low',
+        channel: 'Cultural moment',
+        type: 'moment',
+        start: '2026-04-22',
+        end: '2026-04-22',
+        note: 'April anchor moment.',
+      },
+      {
+        id: 'moment-mental-health-month',
+        name: 'Mental Health Awareness Month',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'High',
+        channel: 'Cultural moment',
+        type: 'moment',
+        start: '2026-05-01',
+        end: '2026-05-31',
+        note: 'Month-long relevance window, especially for attention and wellness narratives.',
+      },
+      {
+        id: 'moment-mothers-day',
+        name: 'Mother’s Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Medium',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-05-10',
+        end: '2026-05-10',
+        note: 'Requested example moment for May.',
+      },
+      {
+        id: 'moment-memorial-day',
+        name: 'Memorial Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'High',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-05-25',
+        end: '2026-05-25',
+        note: 'Major sale and promo anchor.',
+      },
+      {
+        id: 'moment-pride',
+        name: 'Pride Month',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Medium',
+        channel: 'Cultural moment',
+        type: 'moment',
+        start: '2026-06-01',
+        end: '2026-06-30',
+        note: 'Month-long cultural calendar moment.',
+      },
+      {
+        id: 'moment-juneteenth',
+        name: 'Juneteenth',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Low',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-06-19',
+        end: '2026-06-19',
+        note: 'Federal holiday.',
+      },
+      {
+        id: 'moment-fathers-day',
+        name: 'Father’s Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Medium',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-06-21',
+        end: '2026-06-21',
+        note: 'Seasonal gifting and family angle.',
+      },
+      {
+        id: 'moment-july4',
+        name: 'Independence Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Medium',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-07-04',
+        end: '2026-07-04',
+        note: 'Single-day holiday moment.',
+      },
+      {
+        id: 'moment-labor-day',
+        name: 'Labor Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'High',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-09-07',
+        end: '2026-09-07',
+        note: 'Major promo and sitewide sale anchor.',
+      },
+      {
+        id: 'moment-hispanic-heritage',
+        name: 'Hispanic Heritage Month',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Medium',
+        channel: 'Cultural moment',
+        type: 'moment',
+        start: '2026-09-15',
+        end: '2026-10-15',
+        note: 'Cross-month cultural calendar moment.',
+      },
+      {
+        id: 'moment-world-mental-health',
+        name: 'World Mental Health Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'High',
+        channel: 'Cultural moment',
+        type: 'moment',
+        start: '2026-10-10',
+        end: '2026-10-10',
+        note: 'High-signal relevance moment.',
+      },
+      {
+        id: 'moment-halloween',
+        name: 'Halloween',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Low',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-10-31',
+        end: '2026-10-31',
+        note: 'End-of-month seasonal moment.',
+      },
+      {
+        id: 'moment-veterans-day',
+        name: 'Veterans Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Low',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-11-11',
+        end: '2026-11-11',
+        note: 'Single-day holiday moment.',
+      },
+      {
+        id: 'moment-thanksgiving',
+        name: 'Thanksgiving',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'High',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-11-26',
+        end: '2026-11-26',
+        note: 'Holiday and sale-period anchor.',
+      },
+      {
+        id: 'moment-black-friday',
+        name: 'Black Friday',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'High',
+        channel: 'Promo anchor',
+        type: 'moment',
+        start: '2026-11-27',
+        end: '2026-11-27',
+        note: 'Critical BFCM moment.',
+      },
+      {
+        id: 'moment-cyber-monday',
+        name: 'Cyber Monday',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'High',
+        channel: 'Promo anchor',
+        type: 'moment',
+        start: '2026-11-30',
+        end: '2026-11-30',
+        note: 'Critical BFCM moment.',
+      },
+      {
+        id: 'moment-giving-tuesday',
+        name: 'Giving Tuesday',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Medium',
+        channel: 'Cultural moment',
+        type: 'moment',
+        start: '2026-12-01',
+        end: '2026-12-01',
+        note: 'Post-BFCM brand moment.',
+      },
+      {
+        id: 'moment-christmas',
+        name: 'Christmas Day',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'High',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-12-25',
+        end: '2026-12-25',
+        note: 'Holiday close-out moment.',
+      },
+      {
+        id: 'moment-new-years-eve',
+        name: 'New Year’s Eve',
+        lane: 'moments',
+        brand: 'Both',
+        owner: 'Brand',
+        status: 'Locked',
+        priority: 'Medium',
+        channel: 'Holiday',
+        type: 'moment',
+        start: '2026-12-31',
+        end: '2026-12-31',
+        note: 'Year-end transition moment.',
+      },
+    ];
+
+    const planner = document.getElementById('planner');
+    const legend = document.getElementById('legend');
+    const stats = document.getElementById('stats');
+    const rangeLabel = document.getElementById('rangeLabel');
+    const utilityRow = document.getElementById('utilityRow');
+    const brandFilter = document.getElementById('brandFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const viewButtons = Array.from(document.querySelectorAll('.view-btn'));
+
+    const state = {
+      view: 'month',
+      cursor: new Date('2026-05-01T00:00:00'),
+      brand: 'All',
+      status: 'All',
+    };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    function parseDate(value) {
+      const date = new Date(`${value}T00:00:00`);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    function addDays(date, count) {
+      const next = new Date(date);
+      next.setDate(next.getDate() + count);
+      return next;
+    }
+
+    function addMonths(date, count) {
+      return new Date(date.getFullYear(), date.getMonth() + count, 1);
+    }
+
+    function differenceInDays(start, end) {
+      return Math.round((end - start) / 86400000);
+    }
+
+    function endOfMonth(date) {
+      return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    }
+
+    function quarterStart(date) {
+      const month = Math.floor(date.getMonth() / 3) * 3;
+      return new Date(date.getFullYear(), month, 1);
+    }
+
+    function quarterEnd(date) {
+      const start = quarterStart(date);
+      return new Date(start.getFullYear(), start.getMonth() + 3, 0);
+    }
+
+    function monthLabelFor(date) {
+      return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
+    }
+
+    function dayLabel(date) {
+      return new Intl.DateTimeFormat('en-US', { day: 'numeric' }).format(date);
+    }
+
+    function dowLabel(date) {
+      return new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date);
+    }
+
+    function shortMonth(date) {
+      return new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
+    }
+
+    function formatRange(start, end) {
+      const sameDay = start.toDateString() === end.toDateString();
+      const sameYear = start.getFullYear() === end.getFullYear();
+      const startFormat = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+      const endFormat = new Intl.DateTimeFormat('en-US', sameYear ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
+      return sameDay ? endFormat.format(start) : `${startFormat.format(start)}–${endFormat.format(end)}`;
+    }
+
+    function getViewConfig() {
+      if (state.view === 'month') {
+        const start = new Date(state.cursor.getFullYear(), state.cursor.getMonth(), 1);
+        const end = endOfMonth(start);
+        const segments = Array.from({ length: end.getDate() }, (_, index) => {
+          const date = new Date(start.getFullYear(), start.getMonth(), index + 1);
+          return {
+            key: `d-${index + 1}`,
+            type: 'day',
+            start: date,
+            end: date,
+            top: dowLabel(date),
+            main: dayLabel(date),
+            weekend: date.getDay() === 0 || date.getDay() === 6,
+          };
+        });
+
+        return {
+          start,
+          end,
+          segments,
+          label: monthLabelFor(start),
+          minWidth: 10,
+          cardDensityCutoff: 14,
+          step: 1,
+          stepUnit: 'month',
+          timelineTitle: 'Month view',
+          timelineSubtitle: 'Day-by-day overlap management',
+        };
+      }
+
+      if (state.view === 'quarter') {
+        const start = quarterStart(state.cursor);
+        const end = quarterEnd(state.cursor);
+        const segments = [];
+        let pointer = new Date(start);
+        let index = 0;
+
+        while (pointer <= end) {
+          const weekStart = new Date(pointer);
+          const weekEnd = addDays(weekStart, 6) > end ? end : addDays(weekStart, 6);
+          segments.push({
+            key: `w-${index}`,
+            type: 'week',
+            start: weekStart,
+            end: weekEnd,
+            top: shortMonth(weekStart),
+            main: `${weekStart.getDate()}–${weekEnd.getDate()}`,
+            weekend: false,
+          });
+          pointer = addDays(pointer, 7);
+          index += 1;
+        }
+
+        const quarterNumber = Math.floor(start.getMonth() / 3) + 1;
+
+        return {
+          start,
+          end,
+          segments,
+          label: `Q${quarterNumber} ${start.getFullYear()} • ${formatRange(start, end)}`,
+          minWidth: 8,
+          cardDensityCutoff: 10,
+          step: 3,
+          stepUnit: 'month',
+          timelineTitle: 'Quarter view',
+          timelineSubtitle: 'Week-by-week planning lens',
+        };
+      }
+
+      const start = new Date(state.cursor.getFullYear(), 0, 1);
+      const end = new Date(state.cursor.getFullYear(), 11, 31);
+      const segments = Array.from({ length: 12 }, (_, index) => {
+        const monthStart = new Date(start.getFullYear(), index, 1);
+        const monthEnd = endOfMonth(monthStart);
+        return {
+          key: `m-${index}`,
+          type: 'month',
+          start: monthStart,
+          end: monthEnd,
+          top: monthEnd.getDate() + ' days',
+          main: shortMonth(monthStart),
+          weekend: false,
+        };
+      });
+
+      return {
+        start,
+        end,
+        segments,
+        label: `${start.getFullYear()} annual view`,
+        minWidth: 7.5,
+        cardDensityCutoff: 9,
+        step: 1,
+        stepUnit: 'year',
+        timelineTitle: 'Annual view',
+        timelineSubtitle: 'Roadmap layer by month',
+      };
+    }
+
+    function clampDateRange(event, start, end) {
+      const eventStart = parseDate(event.start);
+      const eventEnd = parseDate(event.end);
+      const clippedStart = eventStart < start ? start : eventStart;
+      const clippedEnd = eventEnd > end ? end : eventEnd;
+      return { eventStart, eventEnd, clippedStart, clippedEnd };
+    }
+
+    function overlapsRange(event, start, end) {
+      const { eventStart, eventEnd } = clampDateRange(event, start, end);
+      return eventStart <= end && eventEnd >= start;
+    }
+
+    function layoutLaneEvents(laneEvents, rangeStart, rangeEnd) {
+      const prepared = laneEvents
+        .map((event) => {
+          const { eventStart, eventEnd, clippedStart, clippedEnd } = clampDateRange(event, rangeStart, rangeEnd);
+          return {
+            ...event,
+            eventStart,
+            eventEnd,
+            clippedStart,
+            clippedEnd,
+            startOffset: differenceInDays(rangeStart, clippedStart),
+            endOffset: differenceInDays(rangeStart, clippedEnd),
+          };
+        })
+        .sort((a, b) => a.startOffset - b.startOffset || a.endOffset - b.endOffset);
+
+      const rowEndOffsets = [];
+
+      return prepared.map((event) => {
+        let rowIndex = rowEndOffsets.findIndex((endOffset) => event.startOffset > endOffset);
+        if (rowIndex === -1) {
+          rowIndex = rowEndOffsets.length;
+          rowEndOffsets.push(event.endOffset);
+        } else {
+          rowEndOffsets[rowIndex] = event.endOffset;
+        }
+        return { ...event, rowIndex };
+      });
+    }
+
+    function buildSelect(select, values, label) {
+      select.innerHTML = [`<option value="All">All ${label}</option>`]
+        .concat(values.map((value) => `<option value="${value}">${value}</option>`))
+        .join('');
+    }
+
+    function buildLegend() {
+      legend.innerHTML = lanes.map((lane) => `
+        <span class="legend-pill"><span class="dot" style="background:${lane.color}"></span>${lane.label}</span>
+      `).join('') + `
+        <span class="legend-pill">Solid = activation</span>
+        <span class="legend-pill">Dashed = cultural / seasonal moment</span>
+      `;
+    }
+
+    function buildFilters() {
+      buildSelect(brandFilter, [...new Set(events.map((event) => event.brand))], 'brands');
+      buildSelect(statusFilter, [...new Set(events.map((event) => event.status))], 'statuses');
+      brandFilter.value = state.brand;
+      statusFilter.value = state.status;
+    }
+
+    function render() {
+      const config = getViewConfig();
+      const totalDays = differenceInDays(config.start, config.end) + 1;
+      const visibleEvents = events.filter((event) => {
+        const brandMatch = state.brand === 'All' ? true : event.brand === state.brand;
+        const statusMatch = state.status === 'All' ? true : event.status === state.status;
+        return brandMatch && statusMatch && overlapsRange(event, config.start, config.end);
+      });
+
+      rangeLabel.textContent = config.label;
+      utilityRow.innerHTML = `
+        <span class="chip">${config.timelineTitle}</span>
+        <span class="chip">${config.timelineSubtitle}</span>
+        <span class="chip">Seeded with first live promo + 2026 key moments</span>
+      `;
+
+      stats.innerHTML = `
+        <div class="stat"><strong>${visibleEvents.length}</strong> visible items</div>
+        <div class="stat"><strong>${visibleEvents.filter((event) => event.type === 'activation').length}</strong> activations</div>
+        <div class="stat"><strong>${visibleEvents.filter((event) => event.type === 'moment').length}</strong> moments</div>
+      `;
+
+      planner.style.setProperty('--columns', config.segments.length);
+
+      const headerSegments = config.segments.map((segment) => {
+        const segmentClass = segment.type === 'month' ? 'month-segment' : segment.type === 'week' ? 'week-segment' : '';
+        return `
+          <div class="segment ${segment.weekend ? 'weekend' : ''} ${segmentClass}">
+            <div class="segment-top">${segment.top}</div>
+            <div class="segment-main">${segment.main}</div>
+          </div>
+        `;
+      }).join('');
+
+      const todayVisible = today >= config.start && today <= config.end;
+      const todayPercent = ((differenceInDays(config.start, today) + 0.5) / totalDays) * 100;
+
+      const rows = lanes.map((lane) => {
+        const laneEvents = visibleEvents.filter((event) => event.lane === lane.id);
+        const positioned = layoutLaneEvents(laneEvents, config.start, config.end);
+        const cards = positioned.map((event) => {
+          const left = (event.startOffset / totalDays) * 100;
+          const naturalWidth = ((event.endOffset - event.startOffset + 1) / totalDays) * 100;
+          const compact = naturalWidth < config.cardDensityCutoff;
+          const width = compact ? Math.min(100 - left, Math.max(naturalWidth, config.minWidth)) : naturalWidth;
+          const top = 16 + event.rowIndex * 102;
+          const height = compact ? 76 : 92;
+          return `
+            <article
+              class="event-card ${event.type} ${compact ? 'compact' : ''}"
+              style="left:${left}%;width:${width}%;top:${top}px;height:${height}px;--event-color:${lane.color};"
+              aria-label="${event.name}, ${formatRange(event.clippedStart, event.clippedEnd)}"
+            >
+              <div class="event-header">
+                <div class="event-name">${event.name}</div>
+                <div class="event-date">${formatRange(event.clippedStart, event.clippedEnd)}</div>
+              </div>
+              <div class="event-meta">
+                <span class="tag">${event.brand}</span>
+                <span class="tag">${event.owner}</span>
+                <span class="tag">${event.status}</span>
+              </div>
+              <div class="event-note">${event.note}</div>
+            </article>
+          `;
+        }).join('');
+
+        const highestRow = positioned.length ? Math.max(...positioned.map((event) => event.rowIndex)) : 0;
+        const laneHeight = positioned.length ? Math.max(132, 132 + highestRow * 102) : 132;
+
+        return `
+          <div class="lane-label">
+            <div class="lane-kicker"><span class="dot" style="background:${lane.color}"></span>lane</div>
+            <h2>${lane.label}</h2>
+            <p>${lane.description}</p>
+          </div>
+          <section class="lane-track" style="min-height:${laneHeight}px;">
+            ${todayVisible ? `<div class="today-line" style="left:${todayPercent}%;"></div>` : ''}
+            ${cards || '<div class="empty-state">Waiting on live intake for this lane</div>'}
+          </section>
+        `;
+      }).join('');
+
+      planner.innerHTML = `
+        <div class="corner sticky-head">
+          <div class="eyebrow">Timeline</div>
+          <strong>${config.timelineTitle}</strong>
+          <span style="font-family:var(--font-sans);font-size:0.84rem;color:var(--muted);">${config.timelineSubtitle}</span>
+        </div>
+        <div class="timeline-grid sticky-head">${headerSegments}</div>
+        ${rows}
+      `;
+
+      viewButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === state.view));
+    }
+
+    function shiftRange(direction) {
+      const config = getViewConfig();
+      if (config.stepUnit === 'month') {
+        state.cursor = addMonths(state.cursor, direction * config.step);
+        return;
+      }
+      state.cursor = new Date(state.cursor.getFullYear() + (direction * config.step), state.cursor.getMonth(), 1);
+    }
+
+    document.getElementById('prevRange').addEventListener('click', () => {
+      shiftRange(-1);
+      render();
+    });
+
+    document.getElementById('nextRange').addEventListener('click', () => {
+      shiftRange(1);
+      render();
+    });
+
+    viewButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        state.view = button.dataset.view;
+        render();
+      });
+    });
+
+    brandFilter.addEventListener('change', (event) => {
+      state.brand = event.target.value;
+      render();
+    });
+
+    statusFilter.addEventListener('change', (event) => {
+      state.status = event.target.value;
+      render();
+    });
+
+    buildLegend();
+    buildFilters();
+    render();
+  </script>
+</body>
+</html>
