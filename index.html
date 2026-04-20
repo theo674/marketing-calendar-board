@@ -608,12 +608,12 @@
 
   <script>
     const laneLookup = {
+      moments: { label: 'Seasonal Holidays & Cultural Moments', description: 'Context moments that shape campaign timing and creative.', color: '#58785b' },
       social: { label: 'Owned Media, Social', description: 'Organic, creator, and social storytelling beats.', color: '#e46d57' },
       email: { label: 'Owned Media, Email', description: 'Lifecycle sends, campaign drops, and nurture pushes.', color: '#6d88ff' },
       promotions: { label: 'Promotions', description: 'Offer windows, urgency moments, and conversion pushes.', color: '#109774' },
       launches: { label: 'Product Launches', description: 'Launch windows, reveals, waitlists, and support beats.', color: '#aa63ff' },
       partnerships: { label: 'Partnerships & New Initiatives', description: 'Collabs, pilots, and net-new company bets.', color: '#cb8a2d' },
-      moments: { label: 'Seasonal Holidays & Cultural Moments', description: 'Context moments that shape campaign timing and creative.', color: '#58785b' },
     };
 
     const lanes = Object.entries(laneLookup).map(([id, values]) => ({ id, ...values }));
@@ -624,7 +624,7 @@
         name: 'GWP, earplugs + travel pouch + glass jar',
         lane: 'promotions',
         brand: 'Stasis',
-        owner: 'Devon',
+        owner: 'Growth',
         status: 'Planned',
         priority: 'High',
         channel: 'Promo',
