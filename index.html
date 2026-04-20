@@ -617,6 +617,7 @@
     };
 
     const lanes = Object.entries(laneLookup).map(([id, values]) => ({ id, ...values }));
+    const brandOptions = ['Thesis', 'Stasis', 'Stasis Kids', 'Both'];
 
     const events = [
       {
@@ -1235,7 +1236,9 @@
     }
 
     function buildFilters() {
-      buildSelect(brandFilter, [...new Set(events.map((event) => event.brand))], 'brands');
+      const discoveredBrands = [...new Set(events.map((event) => event.brand))];
+      const orderedBrands = brandOptions.concat(discoveredBrands.filter((brand) => !brandOptions.includes(brand)));
+      buildSelect(brandFilter, orderedBrands, 'brands');
       buildSelect(statusFilter, [...new Set(events.map((event) => event.status))], 'statuses');
       brandFilter.value = state.brand;
       statusFilter.value = state.status;
